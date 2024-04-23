@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Dinosaur</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+            flex-direction: column; /* Ditambahkan untuk menyusun elemen secara vertikal */
+        }
+
+        canvas {
+            border: 2px solid #333;
+        }
+
+        #namaPemain {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #skor {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="namaPemain">Dino Game</h1>
+    <p id="skor">Skor: 0</p> <!-- Menampilkan skor -->
+
+    <canvas id="gameCanvas" width="600" height="200"></canvas>
+
+    <script>
+        const namaPemainElement = document.getElementById('namaPemain');
+        const skorElement = document.getElementById('skor');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let dino = {
+            x: 50,
+            y: canvas.height - 50,
+            width: 50,
+            height: 50,
+            sedangLoncat: false,
+            kecepatanY: 0,
+            gravitasi: 1.5
+        };
+
+        let rintangan = [];
+        let skor = 0; // Inisialisasi skor
+
+        let gameSelesai = false;
+
+        function gambarDinosaurus() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+        }
+
+        function gambarRintangan() {
+            ctx.fillStyle = 'red';
+            rintangan.forEach(rintangan => {
+                ctx.fillRect(rintangan.x, rintangan.y, rintangan.lebar, rintangan.tinggi);
+            });
+        }
+
+        function loncat() {
+            if (!dino.sedangLoncat) {
+                dino.sedangLoncat = true;
+                dino.kecepatanY = -20; // Tinggi loncat
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                loncat();
+            }
+        });
+
+        function buatRintangan() {
+            const rintanganBaru = {
+                x: canvas.width + Math.random() * 500, // Rintangan muncul dari sisi kanan layar secara acak
+                y: canvas.height - 50,
+                lebar: 20,
+                tinggi: 50,
+                kecepatan: 5
+            };
+            rintangan.push(rintanganBaru);
+        }
+
+        function deteksiTabrakan() {
+            rintangan.forEach(rintangan => {
+                if (
+                    dino.x < rintangan.x + rintangan.lebar &&
+                    dino.x + dino.width > rintangan.x &&
+                    dino.y < rintangan.y + rintangan.tinggi &&
+                    dino.y + dino.height > rintangan.y
+                ) {
+                    gameSelesai = true;
+                }
+            });
+        }
+
+        function perbaruiRintangan() {
+            rintangan.forEach(rintangan => {
+                rintangan.x -= rintangan.kecepatan;
+            });
+        }
+
+        function perbaruiSkor() {
+            skor++;
+            skorElement.innerText = `Skor: ${skor}`;
+        }
+
+        function perbarui() {
+            if (!gameSelesai) {
+                if (dino.sedangLoncat) {
+                    dino.y += dino.kecepatanY;
+                    dino.kecepatanY += dino.gravitasi;
+                    if (dino.y >= canvas.height - dino.height) {
+                        dino.sedangLoncat = false;
+                        dino.y = canvas.height - dino.height;
+                        dino.kecepatanY = 0;
+                    }
+                }
+                deteksiTabrakan();
+                perbaruiRintangan();
+                perbaruiSkor(); // Panggil fungsi perbaruiSkor saat perbarui
+            } else {
+                // Reset game
+                rintangan = [];
+                dino = {
+                    x: 50,
+                    y: canvas.height - 50,
+                    width: 50,
+                    height: 50,
+                    sedangLoncat: false,
+                    kecepatanY: 0,
+                    gravitasi: 1.5
+                };
+                gameSelesai = false;
+                skor = 0; // Reset skor
+                skorElement.innerText = `Skor: ${skor}`; // Perbarui tampilan skor
+            }
+        }
+
+        function loopPermainan() {
+            gambarDinosaurus();
+            gambarRintangan();
+            perbarui();
+            requestAnimationFrame(loopPermainan);
+        }
+
+        setInterval(buatRintangan, 2000); // Membuat rintangan secara berkala
+
+        loopPermainan();
+    </script>
+</body>
+</html>
